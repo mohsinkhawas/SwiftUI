@@ -80,7 +80,6 @@ struct ElementDetailView: View {
             }
             .padding()
         }
-        .navigationTitle(element.name)
     }
 
     @ViewBuilder
