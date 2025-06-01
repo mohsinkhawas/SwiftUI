@@ -53,6 +53,7 @@ struct AreaChartView: View {
                 AxisValueLabel()
             }
         }
+        .chartYScale(domain: 0...(animateChart ? 100 : 0))
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 Rectangle()
@@ -87,7 +88,6 @@ struct AreaChartView: View {
             ) :
             AnyShapeStyle(Color.blue.opacity(0.3))
         )
-        .scaleEffect(y: animationProgress, anchor: .bottom)
     }
     
     private func lineMark(for item: MonthlyData) -> some ChartContent {
@@ -97,7 +97,6 @@ struct AreaChartView: View {
         )
         .foregroundStyle(Color.blue)
         .interpolationMethod(.catmullRom)
-        .scaleEffect(y: animationProgress, anchor: .bottom)
     }
     
     @ChartContentBuilder
@@ -121,13 +120,14 @@ struct AreaChartView: View {
     }
     
     private func handleDrag(_ value: DragGesture.Value, geometry: GeometryProxy, proxy: ChartProxy) {
-        let x = value.location.x - geometry[proxy.plotAreaFrame].origin.x
-        guard x >= 0, x < geometry[proxy.plotAreaFrame].width else {
+        guard let plotFrame = proxy.plotFrame else { return }
+        let x = value.location.x - geometry[plotFrame].origin.x
+        guard x >= 0, x < geometry[plotFrame].width else {
             selectedPoint = nil
             return
         }
         
-        let index = Int(x / (geometry[proxy.plotAreaFrame].width / CGFloat(data.count)))
+        let index = Int(x / (geometry[plotFrame].width / CGFloat(data.count)))
         guard index >= 0, index < data.count else { return }
         selectedPoint = data[index]
     }

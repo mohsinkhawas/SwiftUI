@@ -17,6 +17,19 @@ struct CandlestickChartView: View {
         return (open, high, low, close)
     }
     
+    private func handleDrag(_ value: DragGesture.Value, geometry: GeometryProxy, proxy: ChartProxy) {
+        guard let plotFrame = proxy.plotFrame else { return }
+        let x = value.location.x - geometry[plotFrame].origin.x
+        guard x >= 0, x < geometry[plotFrame].width else {
+            selectedCandle = nil
+            return
+        }
+        
+        let index = Int(x / (geometry[plotFrame].width / CGFloat(data.count)))
+        guard index >= 0, index < data.count else { return }
+        selectedCandle = data[index]
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -101,15 +114,7 @@ struct CandlestickChartView: View {
                             .gesture(
                                 DragGesture()
                                     .onChanged { value in
-                                        let x = value.location.x - geometry[proxy.plotAreaFrame].origin.x
-                                        guard x >= 0, x < geometry[proxy.plotAreaFrame].width else {
-                                            selectedCandle = nil
-                                            return
-                                        }
-                                        
-                                        let index = Int(x / (geometry[proxy.plotAreaFrame].width / CGFloat(data.count)))
-                                        guard index >= 0, index < data.count else { return }
-                                        selectedCandle = data[index]
+                                        handleDrag(value, geometry: geometry, proxy: proxy)
                                     }
                                     .onEnded { _ in
                                         selectedCandle = nil

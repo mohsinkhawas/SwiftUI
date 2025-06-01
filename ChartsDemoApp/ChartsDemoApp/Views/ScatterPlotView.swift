@@ -119,30 +119,35 @@ struct ScatterPlotView: View {
     }
     
     private func handleDrag(_ value: DragGesture.Value, geometry: GeometryProxy, proxy: ChartProxy) {
-        let x = value.location.x - geometry[proxy.plotAreaFrame].origin.x
-        let y = value.location.y - geometry[proxy.plotAreaFrame].origin.y
+        guard let plotFrame = proxy.plotFrame else { return }
+        let x = value.location.x - geometry[plotFrame].origin.x
+        let y = value.location.y - geometry[plotFrame].origin.y
         
-        guard x >= 0, x < geometry[proxy.plotAreaFrame].width,
-              y >= 0, y < geometry[proxy.plotAreaFrame].height else {
-            selectedPoint = nil
-            return
+        // Normalize coordinates
+        let normalizedX = x / geometry[plotFrame].width
+        let normalizedY = 1 - (y / geometry[plotFrame].height) // Invert Y axis
+        
+        // Find closest point
+        var closestPoint: StockData?
+        var minDistance = CGFloat.infinity
+        
+        for point in data {
+            let pointX = CGFloat(point.volume) / 100.0 // Normalize X (0-100 to 0-1)
+            let pointY = CGFloat(point.price) / 100.0 // Normalize Y (0-100 to 0-1)
+            
+            let distance = sqrt(pow(pointX - normalizedX, 2) + pow(pointY - normalizedY, 2))
+            if distance < minDistance {
+                minDistance = distance
+                closestPoint = point
+            }
         }
         
-        // Calculate the position in the chart's coordinate space
-        let xPosition = x / geometry[proxy.plotAreaFrame].width
-        let yPosition = 1 - (y / geometry[proxy.plotAreaFrame].height) // Invert Y axis
-        
-        // Find the closest point using normalized coordinates
-        selectedPoint = data.min(by: { point1, point2 in
-            let point1X = (point1.volume - data.map(\.volume).min()!) / (data.map(\.volume).max()! - data.map(\.volume).min()!)
-            let point1Y = (point1.price - data.map(\.price).min()!) / (data.map(\.price).max()! - data.map(\.price).min()!)
-            let point2X = (point2.volume - data.map(\.volume).min()!) / (data.map(\.volume).max()! - data.map(\.volume).min()!)
-            let point2Y = (point2.price - data.map(\.price).min()!) / (data.map(\.price).max()! - data.map(\.price).min()!)
-            
-            let distance1 = pow(point1X - xPosition, 2) + pow(point1Y - yPosition, 2)
-            let distance2 = pow(point2X - xPosition, 2) + pow(point2Y - yPosition, 2)
-            return distance1 < distance2
-        })
+        // Only select if within a reasonable distance
+        if minDistance < 0.1 { // 10% of the chart size
+            selectedPoint = closestPoint
+        } else {
+            selectedPoint = nil
+        }
     }
     
     private var customizationOptions: some View {

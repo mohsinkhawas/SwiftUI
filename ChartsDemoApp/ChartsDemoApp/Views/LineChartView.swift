@@ -5,115 +5,130 @@ struct LineChartView: View {
     @State private var data = ChartData.generateMonthlyData()
     @State private var selectedPoint: MonthlyData?
     @State private var animateChart = false
-    @State private var showPoints = true
+    @State private var showGradient = true
+    @State private var animationProgress: CGFloat = 0
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Monthly Trends")
+                Text("Trend Analysis")
                     .font(.title)
                     .padding(.horizontal)
                 
-                Chart {
-                    ForEach(data) { item in
-                        LineMark(
-                            x: .value("Month", item.month),
-                            y: .value("Value", animateChart ? item.value : 0)
-                        )
-                        .foregroundStyle(Color.green.gradient)
-                        .interpolationMethod(.catmullRom)
-                        
-                        if showPoints {
-                            PointMark(
-                                x: .value("Month", item.month),
-                                y: .value("Value", animateChart ? item.value : 0)
-                            )
-                            .foregroundStyle(Color.green)
-                            .symbolSize(selectedPoint?.id == item.id ? 100 : 50)
-                        }
-                        
-                        if let selected = selectedPoint, selected.id == item.id {
-                            RuleMark(
-                                x: .value("Selected", item.month)
-                            )
-                            .foregroundStyle(Color.gray.opacity(0.3))
-                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-                            
-                            PointMark(
-                                x: .value("Month", item.month),
-                                y: .value("Value", item.value)
-                            )
-                            .foregroundStyle(Color.green)
-                            .annotation(position: .top) {
-                                Text("\(Int(item.value))")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                }
-                .frame(height: 300)
-                .chartXAxis {
-                    AxisMarks(values: .automatic) { value in
-                        AxisGridLine()
-                        AxisValueLabel()
-                    }
-                }
-                .chartYAxis {
-                    AxisMarks(values: .automatic) { value in
-                        AxisGridLine()
-                        AxisValueLabel()
-                    }
-                }
-                .chartOverlay { proxy in
-                    GeometryReader { geometry in
-                        Rectangle()
-                            .fill(.clear)
-                            .contentShape(Rectangle())
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        let x = value.location.x - geometry[proxy.plotAreaFrame].origin.x
-                                        guard x >= 0, x < geometry[proxy.plotAreaFrame].width else {
-                                            selectedPoint = nil
-                                            return
-                                        }
-                                        
-                                        let index = Int(x / (geometry[proxy.plotAreaFrame].width / CGFloat(data.count)))
-                                        guard index >= 0, index < data.count else { return }
-                                        selectedPoint = data[index]
-                                    }
-                                    .onEnded { _ in
-                                        selectedPoint = nil
-                                    }
-                            )
-                    }
-                }
-                .padding()
+                chartContent
+                    .frame(height: 300)
+                    .padding()
                 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Customization Options")
-                        .font(.headline)
-                        .padding(.horizontal)
-                    
-                    Toggle("Show Points", isOn: $showPoints)
-                        .padding(.horizontal)
-                    
-                    Button("Regenerate Data") {
-                        withAnimation {
-                            data = ChartData.generateMonthlyData()
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                    .padding(.horizontal)
-                }
+                customizationOptions
             }
         }
         .navigationTitle("Line Chart")
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.0)) {
+            withAnimation(.easeOut(duration: 1.2)) {
                 animateChart = true
+                animationProgress = 1.0
             }
+        }
+    }
+    
+    private var chartContent: some View {
+        Chart {
+            ForEach(data) { item in
+                lineMark(for: item)
+                if let selected = selectedPoint, selected.id == item.id {
+                    selectionMarks(for: item)
+                }
+            }
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic) { value in
+                AxisGridLine()
+                AxisValueLabel()
+            }
+        }
+        .chartYAxis {
+            AxisMarks(values: .automatic) { value in
+                AxisGridLine()
+                AxisValueLabel()
+            }
+        }
+        .chartYScale(domain: 0...(animateChart ? 100 : 0))
+        .chartOverlay { proxy in
+            GeometryReader { geometry in
+                Rectangle()
+                    .fill(.clear)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                handleDrag(value, geometry: geometry, proxy: proxy)
+                            }
+                            .onEnded { _ in
+                                selectedPoint = nil
+                            }
+                    )
+            }
+        }
+    }
+    
+    private func lineMark(for item: MonthlyData) -> some ChartContent {
+        LineMark(
+            x: .value("Month", item.month),
+            y: .value("Value", animateChart ? item.value : 0)
+        )
+        .foregroundStyle(Color.blue)
+        .interpolationMethod(.catmullRom)
+    }
+    
+    @ChartContentBuilder
+    private func selectionMarks(for item: MonthlyData) -> some ChartContent {
+        RuleMark(
+            x: .value("Selected", item.month)
+        )
+        .foregroundStyle(Color.gray.opacity(0.3))
+        .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
+        
+        PointMark(
+            x: .value("Month", item.month),
+            y: .value("Value", item.value)
+        )
+        .foregroundStyle(Color.blue)
+        .annotation(position: .top) {
+            Text("\(Int(item.value))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    private func handleDrag(_ value: DragGesture.Value, geometry: GeometryProxy, proxy: ChartProxy) {
+        guard let plotFrame = proxy.plotFrame else { return }
+        let x = value.location.x - geometry[plotFrame].origin.x
+        guard x >= 0, x < geometry[plotFrame].width else {
+            selectedPoint = nil
+            return
+        }
+        
+        let index = Int(x / (geometry[plotFrame].width / CGFloat(data.count)))
+        guard index >= 0, index < data.count else { return }
+        selectedPoint = data[index]
+    }
+    
+    private var customizationOptions: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Customization Options")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            Toggle("Show Gradient", isOn: $showGradient)
+                .padding(.horizontal)
+            
+            Button("Regenerate Data") {
+                withAnimation {
+                    data = ChartData.generateMonthlyData()
+                }
+            }
+            .buttonStyle(.bordered)
+            .padding(.horizontal)
         }
     }
 }
