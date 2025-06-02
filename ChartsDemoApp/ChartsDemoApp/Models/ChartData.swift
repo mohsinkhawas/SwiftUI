@@ -35,10 +35,10 @@ enum ChartType: String, CaseIterable, Identifiable {
         switch self {
         case .bar: return "chart.bar"
         case .line: return "chart.line.uptrend.xyaxis"
-        case .area: return "chart.area"
-        case .pie: return "chart.pie"
-        case .scatter: return "chart.xyaxis.line"
-        case .candlestick: return "chart.candlestick"
+        case .area: return "command.circle"
+        case .pie: return "chart.pie.fill"
+        case .scatter: return "chart.dots.scatter"
+        case .candlestick: return "arrowtriangle.right.and.line.vertical.and.arrowtriangle.left"
         }
     }
 }
