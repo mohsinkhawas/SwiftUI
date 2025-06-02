@@ -29,6 +29,8 @@ struct LineChartView: View {
                 animationProgress = 1.0
             }
         }
+        .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]), startPoint: .top, endPoint: .bottom))
+
     }
     
     private var chartContent: some View {

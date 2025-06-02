@@ -143,6 +143,13 @@ struct CandlestickChartView: View {
             }
         }
         .navigationTitle("Candlestick Chart")
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
         .onAppear {
             withAnimation(.easeInOut(duration: 1.0)) {
                 animateChart = true
@@ -155,4 +162,4 @@ struct CandlestickChartView: View {
     NavigationStack {
         CandlestickChartView()
     }
-} 
+}

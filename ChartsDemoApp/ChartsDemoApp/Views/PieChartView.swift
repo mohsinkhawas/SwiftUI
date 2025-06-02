@@ -23,6 +23,13 @@ struct PieChartView: View {
             }
         }
         .navigationTitle("Pie Chart")
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
         .onAppear {
             withAnimation(.easeOut(duration: 1.2)) {
                 animateChart = true
@@ -94,4 +101,4 @@ struct PieChartView: View {
     NavigationStack {
         PieChartView()
     }
-} 
+}
