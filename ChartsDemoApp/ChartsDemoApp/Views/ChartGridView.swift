@@ -18,6 +18,7 @@ struct ChartGridView: View {
                 .padding()
             }
             .navigationTitle("Charts Demo")
+            .background(LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]), startPoint: .top, endPoint: .bottom))
         }
     }
     
@@ -47,21 +48,27 @@ struct ChartOptionCard: View {
         VStack {
             Image(systemName: chartType.systemImage)
                 .font(.system(size: 40))
-                .foregroundColor(.blue)
+                .foregroundColor(.cardIcon)
                 .frame(height: 60)
+                .padding(.bottom, 8)
             
             Text(chartType.rawValue)
                 .font(.headline)
+                .foregroundColor(.cardTitle)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(radius: 2)
+        .background(Color.cardBackground)
+        .cornerRadius(16)
+        .shadow(color: .cardShadow.opacity(0.15), radius: 6, x: 0, y: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.cardIcon.opacity(0.15), lineWidth: 1)
+        )
     }
 }
 
 #Preview {
     ChartGridView()
-} 
+}
