@@ -2,6 +2,12 @@
 
 A SwiftUI demo application showcasing a variety of interactive and customizable charts using Apple's Charts framework.
 
+## Demo Video
+
+
+
+https://github.com/user-attachments/assets/30387cf1-83a1-4859-bf1f-79fcc43cc7ae
+
 ## Features
 
 - **Bar Chart**: Displays monthly data with each bar in a different color.
@@ -10,10 +16,6 @@ A SwiftUI demo application showcasing a variety of interactive and customizable 
 - **Pie Chart**: Presents categorical data as a pie chart with animated slices and selection highlighting.
 - **Scatter Plot**: Plots data points by category, with optional trend line and interactive selection.
 - **Candlestick Chart**: Visualizes stock OHLC data with volume, interactive selection, and custom coloring.
-
-## Screenshots
-
-![Charts Demo Main Screen](docs/screenshots/main.png)
 
 ## Getting Started
 
