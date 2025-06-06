@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var elapsedTime: Int = 0
     @State private var isRunning = false
     @State private var timer: Timer?
+    @State private var shakeOffset: CGFloat = 0
     
     private var targetTime: Int {
         minutes * 60 + seconds
@@ -50,6 +51,16 @@ struct ContentView: View {
             Text(timeString)
                 .font(.system(size: 40, weight: .bold))
                 .foregroundColor(isOvertime ? .red : .black)
+                .offset(x: shakeOffset)
+                .onChange(of: isOvertime) { newValue in
+                    if newValue {
+                        withAnimation(.easeInOut(duration: 0.1).repeatCount(3)) {
+                            shakeOffset = 5
+                        } completion: {
+                            shakeOffset = 0
+                        }
+                    }
+                }
             
             HStack(spacing: 20) {
                 Button(action: resetTimer) {
