@@ -46,12 +46,12 @@ struct StandupTimerApp: App {
         WindowGroup {
             ContentView()
             #if os(macOS)
-                .frame(width: 200, height: 150)
+                .frame(width: 200, height: 120)
             #endif
         }
         #if os(macOS)
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 200, height: 150)
+        .defaultSize(width: 200, height: 120)
         .windowResizability(.contentSize)
         #endif
     }

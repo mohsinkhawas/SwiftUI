@@ -8,12 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var minutes: Int = 0
-    @State private var seconds: Int = 0
+    @State private var minutes: Int = 1  // Default 1 minute
+    @State private var seconds: Int = 30 // Default 30 seconds
+    @State private var minutesString: String = "01"
+    @State private var secondsString: String = "30"
     @State private var elapsedTime: Int = 0
     @State private var isRunning = false
     @State private var timer: Timer?
     @State private var shakeOffset: CGFloat = 0
+    @State private var showingTimeInput = false
     
     private var targetTime: Int {
         minutes * 60 + seconds
@@ -24,59 +27,107 @@ struct ContentView: View {
     }
     
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Picker("Minutes", selection: $minutes) {
-                    ForEach(0..<61) { minute in
-                        Text("\(minute)")
-                            .foregroundColor(.black)
-                            .tag(minute)
-                    }
-                }
-                .labelsHidden()
-                
-                Text(":")
-                    .foregroundColor(.black)
-                
-                Picker("Seconds", selection: $seconds) {
-                    ForEach(0..<60) { second in
-                        Text("\(second)")
-                            .foregroundColor(.black)
-                            .tag(second)
-                    }
-                }
-                .labelsHidden()
-            }
-            
-            Text(timeString)
-                .font(.system(size: 40, weight: .bold))
-                .foregroundColor(isOvertime ? .red : .black)
-                .offset(x: shakeOffset)
-                .onChange(of: isOvertime) { newValue in
-                    if newValue {
-                        withAnimation(.easeInOut(duration: 0.1).repeatCount(3)) {
-                            shakeOffset = 5
-                        } completion: {
-                            shakeOffset = 0
+        ZStack {
+            // Main Timer View
+            VStack(spacing: 12) {
+                Text(timeString)
+                    .font(.system(size: 58, weight: .bold))
+                    .foregroundColor(isOvertime ? .red : .black)
+                    .offset(x: shakeOffset)
+                    .onChange(of: isOvertime) { newValue in
+                        if newValue {
+                            withAnimation(.easeInOut(duration: 0.1).repeatCount(3)) {
+                                shakeOffset = 5
+                            } completion: {
+                                shakeOffset = 0
+                            }
                         }
                     }
-                }
-            
-            HStack(spacing: 20) {
-                Button(action: resetTimer) {
-                    Image(systemName: "arrow.clockwise")
-                        .foregroundColor(.black)
-                }
                 
-                Button(action: toggleTimer) {
-                    Image(systemName: isRunning ? "pause.fill" : "play.fill")
-                        .foregroundColor(.black)
+                HStack(spacing: 20) {
+                    Button(action: resetTimer) {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.black)
+                    }
+                    
+                    Button(action: toggleTimer) {
+                        Image(systemName: isRunning ? "pause.fill" : "play.fill")
+                            .foregroundColor(.black)
+                    }
+                    
+                    Button(action: { showingTimeInput = true }) {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.black)
+                    }
                 }
+                .font(.title2)
             }
-            .font(.title2)
+            .padding()
+            .background(Color.white)
+            
+            // Popup Time Input View
+            if showingTimeInput {
+                Color.black.opacity(0.3)
+                    .edgesIgnoringSafeArea(.all)
+                    .onTapGesture {
+                        showingTimeInput = false
+                    }
+                
+                VStack(spacing: 8) {
+                    Text("Enter the time limit")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                    
+                    HStack(spacing: 20) {
+                        VStack(alignment: .leading) {
+                            HStack(spacing: 4) {
+                                TextField("", text: $minutesString)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 40)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.black)
+                                    #if os(iOS)
+                                    .keyboardType(.numberPad)
+                                    #endif
+                                    .onChange(of: minutesString) { _ in
+                                        validateAndUpdateTime()
+                                    }
+                                Text("m")
+                                    .foregroundColor(.black)
+                            }
+                        }
+                        
+                        VStack(alignment: .leading) {
+                            HStack(spacing: 4) {
+                                TextField("", text: $secondsString)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 40)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.black)
+                                    #if os(iOS)
+                                    .keyboardType(.numberPad)
+                                    #endif
+                                    .onChange(of: secondsString) { _ in
+                                        validateAndUpdateTime()
+                                    }
+                                Text("s")
+                                    .foregroundColor(.black)
+                            }
+                        }
+                    }
+                    
+                    Button("Done") {
+                        showingTimeInput = false
+                    }
+                    .foregroundColor(.black)
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(10)
+                .shadow(radius: 10)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         }
-        .padding()
-        .background(Color.white)
     }
     
     private var timeString: String {
@@ -102,6 +153,20 @@ struct ContentView: View {
         timer = nil
         isRunning = false
         elapsedTime = 0
+        // Reset text fields to current values
+        minutesString = String(format: "%02d", minutes)
+        secondsString = String(format: "%02d", seconds)
+    }
+    
+    private func validateAndUpdateTime() {
+        let newMinutes = Int(minutesString) ?? 0
+        let newSeconds = Int(secondsString) ?? 0
+        
+        minutes = min(max(newMinutes, 0), 60)
+        seconds = min(max(newSeconds, 0), 59)
+        
+        minutesString = String(format: "%02d", minutes)
+        secondsString = String(format: "%02d", seconds)
     }
 }
 
